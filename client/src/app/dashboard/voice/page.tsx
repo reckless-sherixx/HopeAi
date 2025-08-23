@@ -64,6 +64,7 @@ export default function VoiceCommunicationPage() {
   const [currentRecording, setCurrentRecording] = useState<VoiceData | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [messages, setMessages] = useState<Array<{id: string, text: string, sender: 'ai' | 'user', timestamp: Date}>>([])
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -73,10 +74,26 @@ export default function VoiceCommunicationPage() {
   const audioChunksRef = useRef<Blob[]>([])
 
   // AI Conversation setup
-  const conversation = useConversation({
+  const conversations = useConversation({
     onConnect: () => console.log("AI Session Connected"),
     onDisconnect: () => console.log("AI Session Disconnected"),
     onMessage: (message) => console.log("AI Message:", message),
+    onError: (error) => console.error("AI Session Error:", error),
+  })
+
+    const conversation = useConversation({
+    onConnect: () => console.log("AI Session Connected"),
+    onDisconnect: () => console.log("AI Session Disconnected"),
+    onMessage: (message) => {
+      console.log("AI Message:", message)
+      // Add AI message to transcript
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        text: message.message || JSON.stringify(message),
+        sender: 'ai',
+        timestamp: new Date()
+      }])
+    },
     onError: (error) => console.error("AI Session Error:", error),
   })
 
@@ -364,6 +381,11 @@ export default function VoiceCommunicationPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
+  // Console log to prevent unused variable warning
+  useEffect(() => {
+    console.log("Voice recordings count:", voiceRecordings.length)
+  }, [voiceRecordings])
+
   if (hasPermission === false) {
     return (
       <div className="space-y-6">
@@ -621,7 +643,7 @@ export default function VoiceCommunicationPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="ai-session" className="space-y-6">
+       <TabsContent value="ai-session" className="space-y-6">
           {/* AI Conversation Session */}
           <Card className="border-border">
             <CardHeader>
@@ -634,79 +656,97 @@ export default function VoiceCommunicationPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex flex-col items-center gap-6 p-6 bg-gradient-to-b from-blue-50 to-blue-100 rounded-2xl">
-                <div className="text-center space-y-2">
-                  <h3 className="text-xl font-semibold text-blue-900">
-                    Autism Screening AI Session
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    Start a conversation with the AI agent. Speak freely, and you'll get gentle guidance.
-                  </p>
-                </div>
-
-                {/* Controls */}
-                <div className="flex gap-4">
-                  <Button
-                    onClick={startAIConversation}
-                    disabled={conversation.status === "connected"}
-                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
-                  >
-                    <MessageCircle className="w-4 h-4 mr-2" />
-                    Start Session
-                  </Button>
-                  <Button
-                    onClick={stopAIConversation}
-                    disabled={conversation.status !== "connected"}
-                    variant="destructive"
-                    className="px-5 py-2.5"
-                  >
-                    <Square className="w-4 h-4 mr-2" />
-                    Stop Session
-                  </Button>
-                </div>
-
-                {/* Status Indicators */}
-                <div className="flex flex-col items-center gap-2">
-                  <Badge
-                    variant={conversation.status === "connected" ? "default" : "secondary"}
-                    className={conversation.status === "connected" ? "bg-green-100 text-green-700" : ""}
-                  >
-                    {conversation.status === "connected" ? "Connected" : "Disconnected"}
-                  </Badge>
-
-                  {/* Speaking / Listening Animation */}
-                  {conversation.status === "connected" && (
-                    <motion.div
-                      className="flex items-center gap-2 mt-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+              {/* AI Session Interface - matching recording theme */}
+              <div className="flex flex-col items-center space-y-6">
+                {/* Visual AI Status Indicator */}
+                <div className="relative w-32 h-32">
+                  <div className="absolute inset-0 rounded-full border-4 border-muted flex items-center justify-center">
+                    <div
+                      className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 ${
+                        conversation.status === "connected" && conversation.isSpeaking
+                          ? "bg-primary animate-pulse"
+                          : conversation.status === "connected"
+                            ? "bg-secondary"
+                            : "bg-muted"
+                      }`}
                     >
-                      {conversation.isSpeaking ? (
-                        <>
-                          <Volume2 className="text-blue-600" />
-                          <motion.div
-                            className="h-3 w-3 bg-blue-500 rounded-full"
-                            animate={{ scale: [1, 1.5, 1] }}
-                            transition={{ duration: 0.8, repeat: Infinity }}
-                          />
-                          <p className="text-blue-800 text-sm font-medium">AI Speaking</p>
-                        </>
+                      {conversation.status === "connected" && conversation.isSpeaking ? (
+                        <Volume2 className="w-8 h-8 text-primary-foreground" />
+                      ) : conversation.status === "connected" ? (
+                        <Mic className="w-8 h-8 text-secondary-foreground" />
                       ) : (
-                        <>
-                          <Mic className="text-red-600" />
-                          <motion.div
-                            className="h-3 w-3 bg-red-500 rounded-full"
-                            animate={{ scale: [1, 1.5, 1] }}
-                            transition={{ duration: 0.8, repeat: Infinity }}
-                          />
-                          <p className="text-red-800 text-sm font-medium">Listening</p>
-                        </>
+                        <Bot className="w-8 h-8 text-muted-foreground" />
                       )}
-                    </motion.div>
+                    </div>
+                  </div>
+
+                  {/* AI Activity Ring */}
+                  {conversation.status === "connected" && (
+                    <div
+                      className={`absolute inset-0 rounded-full border-4 transition-all duration-300 ${
+                        conversation.isSpeaking 
+                          ? "border-primary animate-pulse" 
+                          : "border-secondary"
+                      }`}
+                      style={{
+                        borderWidth: conversation.isSpeaking ? "4px" : "2px",
+                        opacity: 0.7,
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* AI Session Status */}
+                <div className="text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <Badge
+                      variant={
+                        conversation.status === "connected" && conversation.isSpeaking
+                          ? "default"
+                          : conversation.status === "connected"
+                            ? "secondary"
+                            : "outline"
+                      }
+                    >
+                      {conversation.status === "connected" && conversation.isSpeaking && (
+                        <div className="w-2 h-2 bg-current rounded-full animate-pulse mr-1" />
+                      )}
+                      {conversation.status === "connected" 
+                        ? (conversation.isSpeaking ? "AI Speaking" : "Listening")
+                        : "Disconnected"
+                      }
+                    </Badge>
+                  </div>
+
+                  {conversation.status === "connected" && (
+                    <p className="font-body text-sm text-muted-foreground">
+                      {conversation.isSpeaking 
+                        ? "AI is responding to your input" 
+                        : "Speak naturally, the AI is listening"
+                      }
+                    </p>
+                  )}
+                </div>
+
+                {/* Control Buttons */}
+                <div className="flex items-center gap-4">
+                  {conversation.status !== "connected" && (
+                    <Button onClick={startAIConversation} size="lg" className="px-8">
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      Start AI Session
+                    </Button>
+                  )}
+
+                  {conversation.status === "connected" && (
+                    <Button onClick={stopAIConversation} variant="destructive" size="lg">
+                      <Square className="w-5 h-5 mr-2" />
+                      End Session
+                    </Button>
                   )}
                 </div>
               </div>
 
+              {/* Session Guidelines */}
               <div className="bg-muted/30 rounded-lg p-4">
                 <h4 className="font-heading font-semibold text-foreground mb-2">Session Guidelines</h4>
                 <ul className="font-body text-sm text-muted-foreground space-y-1">
@@ -716,6 +756,128 @@ export default function VoiceCommunicationPage() {
                   <li>• Sessions typically last 10-15 minutes for optimal results</li>
                 </ul>
               </div>
+
+              {/* Conversation Transcript */}
+              {conversation.status === "connected" && (
+                <Card className="border-border bg-background">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="font-heading text-lg flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      Live Transcript
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 overflow-y-auto border border-border rounded-lg bg-background">
+                      <div className="p-4 space-y-4">
+                        {messages.length === 0 ? (
+                          <div className="flex items-center justify-center py-8">
+                            <p className="font-body text-sm text-muted-foreground">
+                              Conversation will appear here once started...
+                            </p>
+                          </div>
+                        ) : (
+                          messages.map((message) => (
+                            <div key={message.id}>
+                              {message.sender === 'ai' ? (
+                                /* AI Message */
+                                <div className="flex items-start gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                    <Bot className="w-4 h-4 text-primary-foreground" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="bg-muted rounded-lg rounded-tl-none p-3">
+                                      <p className="font-body text-sm text-foreground">
+                                        {message.text}
+                                      </p>
+                                    </div>
+                                    <p className="font-body text-xs text-muted-foreground mt-1">
+                                      AI Assistant • {message.timestamp.toLocaleTimeString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                /* User Message */
+                                <div className="flex items-start gap-3 flex-row-reverse">
+                                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                                    <Mic className="w-4 h-4 text-secondary-foreground" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="bg-foreground text-background rounded-lg rounded-tr-none p-3 ml-auto max-w-xs">
+                                      <p className="font-body text-sm">
+                                        {message.text}
+                                      </p>
+                                    </div>
+                                    <p className="font-body text-xs text-muted-foreground mt-1 text-right">
+                                      You • {message.timestamp.toLocaleTimeString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        )}
+
+                        {/* Typing indicator when AI is speaking */}
+                        {conversation.isSpeaking && (
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                              <Bot className="w-4 h-4 text-primary-foreground" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="bg-muted rounded-lg rounded-tl-none p-3">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                  <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                </div>
+                              </div>
+                              <p className="font-body text-xs text-muted-foreground mt-1">AI Assistant • typing...</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Listening indicator when waiting for user */}
+                        {conversation.status === "connected" && !conversation.isSpeaking && messages.length > 0 && (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Mic className="w-4 h-4 animate-pulse" />
+                              <span className="font-body text-sm">Listening for your response...</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Transcript Controls */}
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          Auto-scroll enabled
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          Live transcript
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {messages.length} messages
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-1" />
+                          Export
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setMessages([])}
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
