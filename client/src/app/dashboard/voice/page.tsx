@@ -417,9 +417,7 @@ export default function VoiceCommunicationPage() {
       </div>
 
       <Tabs defaultValue="record" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="record">Record Audio</TabsTrigger>
-          <TabsTrigger value="upload">Upload File</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ai-session">AI Session</TabsTrigger>
           <TabsTrigger value="analysis">Analysis Results</TabsTrigger>
         </TabsList>
