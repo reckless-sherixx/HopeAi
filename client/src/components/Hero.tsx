@@ -24,7 +24,7 @@ const Hero = () => {
               Understanding Every Mind, Embracing Every Journey
             </h1>
 
-            <Link href="/contact">
+            <Link href="/dashboard">
               <button className="relative m-6 text-lg sm:text-xl md:text-2xl bg-transparent border-2 border-white text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-full font-semibold hover:bg-white hover:text-black transition-all duration-300 shadow-lg group">
                 <span className="inline-block animate-spin">✦</span>
                 <span className="mx-2 sm:mx-3 md:mx-4">Let&apos;s Talk!</span>
