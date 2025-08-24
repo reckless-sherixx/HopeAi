@@ -11,10 +11,6 @@ import { Home, Mic, Video, FileText, Settings, HelpCircle, Heart, Menu, X, User,
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Voice Communication", href: "/dashboard/voice", icon: Mic, badge: "Active" },
-  { name: "Video Recognition", href: "/dashboard/video", icon: Video, badge: "Active" },
-  { name: "Assessment Reports", href: "/dashboard/transcripts", icon: FileText },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Profile", href: "/dashboard/profile", icon: User },
 ]
 
 const secondaryNavigation = [
@@ -55,7 +51,7 @@ export function DashboardSidebar() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Heart className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-heading font-bold text-xl text-sidebar-foreground">Hope Ai</span>
+            <span className="font-heading font-bold text-xl text-sidebar-foreground">Hope Aiof</span>
           </div>
 
           {/* Navigation */}
@@ -108,19 +104,6 @@ export function DashboardSidebar() {
                   </Link>
                 )
               })}
-            </div>
-          </div>
-
-          {/* User Profile Section */}
-          <div className="px-4 py-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">Dr. Sarah Johnson</p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">Healthcare Professional</p>
-              </div>
             </div>
           </div>
         </div>

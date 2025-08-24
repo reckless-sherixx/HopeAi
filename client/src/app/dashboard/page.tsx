@@ -46,7 +46,7 @@ export default function DashboardPage() {
               <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
                 <Video className="w-6 h-6 text-secondary" />
               </div>
-              <Badge variant="secondary">Active</Badge>
+              <Badge variant="secondary">In Development</Badge>
             </div>
             <CardTitle className="font-heading text-xl">Video Recognition</CardTitle>
             <CardDescription className="font-body">
@@ -54,8 +54,8 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild className="w-full">
-              <Link href="/dashboard/video">
+            <Button asChild className="w-full" disabled={true}>
+              <Link href="/dashboard">
                 Upload Video <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline" className="w-full bg-transparent">
-              <Link href="/dashboard/transcripts">
+              <Link href="/dashboard">
                 View Transcripts <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
