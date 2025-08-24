@@ -1,5 +1,5 @@
 import Hero from "@/components/Hero";
-
+import Footer from "@/components/Footer";
 // import AiSession from "@/components/AiSession";
 import Services from "@/components/Services";
 import Testemonials from "@/components/Testemonials";
@@ -14,6 +14,7 @@ export default function Home() {
     <TimelineDemo />
     <DoctorsCarousel />
     <Testemonials />
+    <Footer />
     </>
   );
 }
